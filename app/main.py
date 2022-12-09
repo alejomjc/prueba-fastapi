@@ -13,6 +13,8 @@ usuarios = []
 class RequiredSkills(BaseModel):
     Python: Optional[int] = 1
     NoSQL: Optional[int] = 2
+    PostgresSQL: Optional[int] = 3
+    GIT: Optional[int] = 3
 
 
 class Vacante(BaseModel):
@@ -64,6 +66,7 @@ def get_vacante(vacancy_id: str):
 
 @app.put('/vacante/{vacancy_id}')
 def update_vacante(vacancy_id: str, nuevoVacante: Vacante):
+    print('PruebaX!!!!')
     for index, vacante in enumerate(vacantes):
         if vacante['vacancy_id'] == vacancy_id:
             vacantes[index]["position_name"] = nuevoVacante.position_name
@@ -97,9 +100,10 @@ def get_usuarios():
 
 @app.post('/usuarios')
 def save_usuario(usuario: Usuario):
+    print('data!!!: ', usuario)
     usuario.user_id =  str(uuid())
     usuarios.append(usuario.dict())
-    return {"respuesta": "OK"}
+    return {"respuesta": "OK", "id": usuario.user_id}
 
 
 @app.get('/usuario/{user_id}')
@@ -137,9 +141,10 @@ def delete_usuario(user_id: str):
 # Consulta de vacantes por usuarios
 
 
-@app.get('/usuario/{user_id}')
+@app.get('/vacantes_x_usuario/{user_id}')
 def get_vacantes_por_usuario(user_id: str):
     vacantes_disponibles = []
+    vacantes_posibles = []
     usuario_buscado = ''
     for usuario in usuarios:
         if usuario['user_id'] == user_id:
@@ -151,9 +156,26 @@ def get_vacantes_por_usuario(user_id: str):
                 for required_skill in vacante['RequiredSkills']:
                     if user_skill == required_skill:
                         vacantes_disponibles.append(vacante)
+                    else:
+                        contador = 0
+                        for rs in required_skill:
+                            for us in user_skill:
+                                if int(rs['Python']) <= int(us['Python']):
+                                    contador += 1
+                                elif rs['NoSQL'] <= us['NoSQL']:
+                                    contador += 1
+                                elif rs['PostgresSQL'] <= us['PostgresSQL']:
+                                    contador += 1
+                                elif rs['GIT'] <= us['GIT']:
+                                    contador += 1
 
-        if vacantes_disponibles:
-            return vacantes_disponibles
+                        if contador == len(required_skill):
+                            vacantes_disponibles.append(vacante)
+                        elif contador >= len(required_skill) / 2:
+                            vacantes_posibles.append(vacante)     
+
+        if vacantes_disponibles or vacantes_posibles:
+            return {'vacantes_disponibles': vacantes_disponibles, 'vacantes_posibles': vacantes_posibles}
         else:
             return {"mensaje": "No hay ninguna vacante a la que pueda aplicar"}
         
