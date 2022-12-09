@@ -27,3 +27,9 @@ def test_crud_vacantes_ok():
 
     assert response.status_code == status.HTTP_200_OK, response.text
     data = response.json()
+    assert data['position_name'] == vacante['position_name']
+    assert data['company_name'] == vacante['company_name']
+    assert data['salary'] == vacante['salary']
+    assert data['currency'] == vacante['currency']
+    assert data['vacancy_ink'] == vacante['vacancy_ink']
+    assert data['required_skills'] == vacante['required_skills']
